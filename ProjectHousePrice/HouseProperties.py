@@ -1,37 +1,35 @@
-import pandas as pd
 from bs4 import BeautifulSoup
+import pandas as pd
 
-# Read the HTML file
-with open('this_is_a_test.html', 'r', encoding='utf-8') as file:
-    soup = BeautifulSoup(file, 'html.parser')
+class DataExtractor():
+    def __init__(self, HTMLFileName) -> None:
+        self.HTMLFileName = HTMLFileName
 
-# Find all elements with the specified class
-listing_cards = soup.find_all(class_='listing-card-content col-12 col-md-8 py-3 py-md-3 px-3 position-relative')
+    def getData(self, df:pd.DataFrame) -> pd.DataFrame:
+        with open(self.HTMLFileName, "r", encoding="utf-8") as file:
+            html_content = file.read()
+        soup = BeautifulSoup(html_content, "html.parser")
 
-# Initialize lists to store the extracted data
-fw_bold_fs_5 = []
-fw_500_fs_7 = []
-fw_bold_fs_7 = []
+        data_listing_ids = soup.find_all(attrs={"data-listing-id": True})
 
-# Extract the text from the specific classes
-for card in listing_cards:
-    fw_bold_fs_5_text = card.find(class_='fw-bold fs-5 text-onyx me-3 font-family-secondary')
-    fw_500_fs_7_text = card.find(class_='d-block fw-500 fs-7 text-onyx font-family-secondary')
-    fw_bold_fs_7_text = card.find(class_='fs-7 text-onyx fw-bold')
-    
-    # Append the text to the respective lists
-    fw_bold_fs_5.append(fw_bold_fs_5_text.get_text(strip=True) if fw_bold_fs_5_text else '')
-    fw_500_fs_7.append(fw_500_fs_7_text.get_text(strip=True) if fw_500_fs_7_text else '')
-    fw_bold_fs_7.append(fw_bold_fs_7_text.get_text(strip=True) if fw_bold_fs_7_text else '')
+        listing_ids = [tag["data-listing-id"] for tag in data_listing_ids]
 
-# Create a DataFrame
-data = {
-    'fw_bold_fs_5': fw_bold_fs_5,
-    'fw_500_fs_7': fw_500_fs_7,
-    'fw_bold_fs_7': fw_bold_fs_7
-}
-df = pd.DataFrame(data)
+        listing_cards = soup.find_all(class_="listing-card-content col-12 col-md-8 py-3 py-md-3 px-3 position-relative")
 
-# Display the DataFrame
-print(df)
+
+        values = []
+        for card in listing_cards:
+            fw_bold = card.find(class_="fw-bold fs-5 text-onyx me-3 font-family-secondary").text.strip()
+            fs_7_1 = card.find(class_="d-block fw-500 fs-7 text-onyx font-family-secondary").text.strip()
+            fs_7_2 = card.find(class_="fs-7 text-onyx fw-bold").text.strip()
+            values.append({"fw_bold": fw_bold, "fs_7_1": fs_7_1, "fs_7_2": fs_7_2})
+
+
+        new_df = pd.DataFrame(values)
+
+        new_df["listing_id"] = listing_ids
+
+
+        df = pd.concat([df, new_df], ignore_index=True)
+        return df
 

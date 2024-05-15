@@ -2,28 +2,47 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+
 from ProjectHousePrice import DataClean as DC
+from ProjectHousePrice import DataDownload as DD
+from ProjectHousePrice import DataExtractor as DX
 
 import sys
 
 def main():
+    #2018-as aadtok elemzése
     RentHousedf = pd.read_csv(r"RentBudapestDataset\flats.csv")
-
     CleanedData = DC(RentHousedf)
-    LocPricedf = CleanedData.HousePriceHue()
 
-    NoOutlierdfPrice = OutlierFilter(LocPricedf, 'price')
-    NoOutlierdfSize = OutlierFilter(NoOutlierdfPrice, 'size')
+    #Ingatlan.com letöltése
+    StartURL = "https://ingatlan.com/lista/elado+lakas+budapest+10-mFt-tol"
+
+    IngatlanDownloader = DD()
+    HTMLScraper = DX("output.html")
+    IngatlanDf = pd.DataFrame()
+    for i in range(2):
+        if i == 0:
+            print(i)
+            IngatlanDownloader.HTMLDownloader(StartURL)
+        else:
+            IngatlanDownloader.HTMLDownloader(StartURL+f"?page={i+1}")
+        IngatlanDf = HTMLScraper.getData(IngatlanDf)
+        
+    print(IngatlanDf)
+    # LocPricedf = CleanedData.HousePriceHue()
+
+    # NoOutlierdfPrice = OutlierFilter(LocPricedf, 'price')
+    # NoOutlierdfSize = OutlierFilter(NoOutlierdfPrice, 'size')
 
 
-    sns.scatterplot(data=NoOutlierdfPrice, x="latitude", y='longitude', hue="price", size="price")
-    plt.show()
+    # sns.scatterplot(data=NoOutlierdfPrice, x="latitude", y='longitude', hue="price", size="price")
+    # plt.show()
 
-    sns.displot(NoOutlierdfPrice['price'])
-    plt.show()
+    # sns.displot(NoOutlierdfPrice['price'])
+    # plt.show()
 
-    sns.scatterplot(data=NoOutlierdfSize, x="size", y='price')
-    plt.show()
+    # sns.scatterplot(data=NoOutlierdfSize, x="size", y='price')
+    # plt.show()
 
 
 def OutlierFilter(df: pd.DataFrame, columnName: str) -> pd.DataFrame:
