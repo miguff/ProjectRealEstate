@@ -5,8 +5,8 @@ class DataExtractor():
     def __init__(self, HTMLFileName) -> None:
         self.HTMLFileName = HTMLFileName
 
-    def getData(self, df:pd.DataFrame) -> pd.DataFrame:
-        with open(self.HTMLFileName, "r", encoding="utf-8") as file:
+    def getData(self, df:pd.DataFrame, pageNumber:int) -> pd.DataFrame:
+        with open(self.HTMLFileName+f"{pageNumber}.html", "r", encoding="utf-8") as file:
             html_content = file.read()
         soup = BeautifulSoup(html_content, "html.parser")
 
